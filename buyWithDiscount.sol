@@ -4,7 +4,6 @@ contract ContractB{
     
 mapping(address => uint) AddrMap;    
 address[] private Accounts;
-address owner;
 
 event PaymentDone(address sender,uint value);
 
@@ -65,25 +64,22 @@ contract contractA{
     
     uint actualDiscount;
     
-    address _owner = address(0x5B38Da6a701c568545dCfcB03FcB875f56beddC4);
+    address owner = address(0x5B38Da6a701c568545dCfcB03FcB875f56beddC4);
     
     
     function payRequireDiscount(address payable _address)  amountAboveZero(msg.value) validAddress(_address) external payable{
-        require(_address != address(0));
-        require(msg.value > 0);
         ContractB StorageContract = ContractB(Storage_address);
         uint calcDiscount = msg.value*actualDiscount/100;
         StorageContract.payAndRequestDiscount{value: calcDiscount}(_address,calcDiscount);
     }
     
     function payAndApplyDiscount(address payable _address,uint RequestedDiscount) amountAboveZero(msg.value) validAddress(_address) external payable{
-        require(msg.value >0);
         ContractB StorageContract = ContractB(Storage_address);
         StorageContract.useDiscountAndDelete(_address,RequestedDiscount);
     }
     
     modifier OnlyOwnerof(){
-        require(msg.sender == _owner);
+        require(msg.sender == owner);
         _;
     }
     
@@ -101,7 +97,7 @@ contract contractA{
         Storage_address = _address;
     }
     
-    function getStorageContract() external view returns(address){
+    function getStorageContract() external OnlyOwnerof view returns(address){
         return Storage_address;
     }
     
@@ -117,5 +113,13 @@ contract contractA{
         return address(this).balance;
     }
     
+    function setOwner(address payable _address) external OnlyOwnerof{
+        owner = _address;
+    }
+    
+    function withdrow() external OnlyOwnerof{
+    payable(msg.sender).transfer(address(this).balance);
+
+    }
     
 }
